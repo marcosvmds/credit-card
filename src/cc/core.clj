@@ -2,16 +2,40 @@
   (:require [cc.db]
             [cc.logic]))
 
-(println "Running...")
+(defn printar
+  [lista]
+  (print (map println lista)))
 
-(println "Tudo")
-(cc.logic/lista-clientes-completo (cc.db/clientes))
-(println "Clientes")
-(cc.logic/lista-dados-clientes (cc.db/clientes))
-(println "Cartoes")
-(cc.logic/lista-dados-cartoes1 (cc.db/clientes))
+(println "Running..." (local-date-time))
+(println "\n")
 
-(println "Cartoes2")
-(cc.logic/lista-dados-cartoes (cc.db/clientes))
+(println "------------- Tudo")
+(printar (cc.logic/lista-tudo (cc.db/cliente)))
+(println "\n")
+
+(println "------------- Dados do Cliente")
+(printar (cc.logic/lista-dados-cliente (cc.db/cliente)))
+(println "\n")
+
+(println "------------- Cartao e Compras")
+(printar (cc.logic/lista-dados-cartoes-e-compras (cc.db/cliente)))
+(println "\n")
+
+(println "------------- Dados do Cartao")
+(printar (cc.logic/lista-dados-cartoes (cc.db/cliente)))
+(println "\n")
+
+(println "------------- Compras realizadas")
+(printar (cc.logic/lista-compras-realizadas (cc.db/cliente)))
+(println "\n")
+
+(println "------------- Gastos por categoria")
+(println (cc.logic/lista-compras-por-categoria (cc.db/cliente)))
+(println "\n")
+
+(println "------------- Gastos por fatura")
+(println (cc.logic/lista-compras-na-mesma-fatura (cc.db/cliente)))
+(println "\n")
+
 
 
