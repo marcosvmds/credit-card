@@ -17,20 +17,20 @@
 ;(printar/pprint (cc.logic/lista-dados-cartoes-e-compras (cc.db/cliente)))
 ;(println "\n")
 
-(println "------------- Dados do Cartao")
+(print "------- Dados do Cartao")
 (printar/pprint (cc.logic/lista-dados-cartoes (cc.db/cliente)))
 (println "\n")
 
-(println "------------- Compras realizadas")
-(printar/pprint (cc.logic/lista-compras-realizadas (cc.db/cliente)))
+(print "------- Compras realizadas")
+(printar/print-table (cc.logic/lista-compras-realizadas (cc.db/cliente)))
 (println "\n")
 
-(println "------------- Gastos por categoria")
-(printar/pprint (cc.logic/lista-compras-por-categoria (cc.db/cliente)))
+(print "------- Gastos por categoria")
+(printar/print-table (cc.logic/lista-compras-por-categoria (cc.db/cliente)))
 (println "\n")
 
-(println "------------- Gastos por fatura")
-(printar/pprint (cc.logic/lista-compras-na-mesma-fatura (cc.db/cliente)))
+(print "------- Gastos por fatura")
+(printar/print-table (cc.logic/lista-compras-na-mesma-fatura (cc.db/cliente)))
 (println "\n")
 
 
