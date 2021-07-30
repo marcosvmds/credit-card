@@ -1,10 +1,8 @@
 (ns cc.logic
   (:require [cc.db]
-            [cc.logic]))
-
-(defn lista-tudo
-  [dados-do-cliente]
-  (->> dados-do-cliente))
+            [cc.logic]
+            [clojure.pprint :as printar]))
+(use 'java-time)
 
 (defn lista-dados-cliente
   [dados-do-cliente]
@@ -31,7 +29,9 @@
 (defn calcula-gastos-por-categoria
   [[categoria compra]]
   (let [valor-total (reduce + (map :valor compra))]
-    (println "---->" valor-total "gastos com a categoria" categoria)))
+    {:categoria categoria :valor-total valor-total}))
+
+;{:categoria categoria :valor-total valor-total}
 
 (defn lista-compras-por-categoria
   [dados-do-cliente]
@@ -47,7 +47,7 @@
 (defn calcula-gastos-por-fatura
   [[mes compra]]
   (let [valor-total (reduce + (map :valor compra))]
-    (println "----> Valor da fatura do mes" mes "=" valor-total)))
+    {:Mes mes  :Valor-da-fatura valor-total}))
 
 (defn lista-compras-na-mesma-fatura
   [dados-do-cliente]
@@ -63,3 +63,15 @@
   (let [compras (lista-compras-realizadas dados-do-cliente)]
     (println (filter (> (:valor compras) 500)))
     ))
+
+(defn verifica-valor
+  [compra]
+  (->> compra
+       :valor))
+
+(defn compras-mais-caras-que
+  [dados-do-cliente valor]
+  (->> dados-do-cliente
+       (lista-compras-realizadas)
+       (map (:valor))
+       ))
