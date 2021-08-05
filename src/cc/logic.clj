@@ -1,88 +1,89 @@
 (ns cc.logic
   (:require [cc.db]
-            [cc.logic]
-            [clojure.pprint :as printar]))
-(use 'java-time)
+            [cc.model :as m]
+            [java-time :as jt]
+            [schema.core :as s]
+            [clojure.pprint :as pprint]))
 
-(import java.util.Calendar)
-(import java.text.DateFormatSymbols)
+(s/set-fn-validation! true)
 
-(defn date-from [d m y]
-  (.getTime (doto (Calendar/getInstance)
-              (.setTimeInMillis 0)
-              (.set y (- m 1) d 0 0 0))))
-
-(defn get-month-from-compra [item]
-  ((vec (.getMonths (DateFormatSymbols/getInstance))) (.getMonth (item :data))))
-
-(defn lista-dados-cliente
-  [dados-do-cliente]
-  (->> dados-do-cliente
+(s/defn lista-dados-cliente
+  [cliente :- m/Cliente]
+  (->> cliente
        (:dados-cliente)))
 
-(defn lista-dados-cartoes-e-compras
-  [dados-do-cliente]
-  (->> dados-do-cliente
-       :cartao-de-credito))
+(s/defn lista-dados-cartao
+  [cliente :- m/Cliente]
+  (->> cliente
+       (:cartao-de-credito)
+       :dados-cartao))
 
-(defn lista-dados-cartoes
-  [dados-do-cliente]
-  (->> dados-do-cliente
-        (lista-dados-cartoes-e-compras)
-        :dados-cartao))
+(s/defn busca-limite
+  [cliente :- m/Cliente]
+  (->> cliente
+       (lista-dados-cartao)
+       :limite))
 
-(defn lista-compras-realizadas
-  [dados-do-cliente]
-  (->> dados-do-cliente
-       (lista-dados-cartoes-e-compras)
-       :compras-realizadas))
+(s/defn tem-limite?
+  [limite :- m/PosOuZero, valor-da-compra]
+  (>= limite valor-da-compra))
 
-(defn calcula-gastos-por-categoria
-  [[categoria compra]]
+(s/defn lista-compras-realizadas
+  [cliente :- m/Cliente]
+  (->> cliente
+       (:cartao-de-credito)
+       (:compras-realizadas)
+       (sort-by :data)
+       reverse))
+
+(s/defn calcula-gastos-por-categoria
+  [[categoria, compra]]
   (let [valor-total (reduce + (map :valor compra))]
     {:categoria categoria :valor-total valor-total}))
 
-;{:categoria categoria :valor-total valor-total}
-
-(defn lista-compras-por-categoria
-  [dados-do-cliente]
-  (->> dados-do-cliente
+(s/defn lista-compras-por-categoria
+  [cliente :- m/Cliente]
+  (->> cliente
        (lista-compras-realizadas)
        (group-by :categoria)
        (map calcula-gastos-por-categoria)))
 
-(defn verifica-mes
-  [compra]
-  (as (:data compra) :month-of-year))
+(s/defn verifica-mes
+  [compra :- m/Compra]
+  (java-time/as (:data compra) :month-of-year))
 
-(defn calcula-gastos-por-fatura
-  [[mes compra]]
+(s/defn calcula-gastos-por-fatura
+  [[mes, compra]]
   (let [valor-total (reduce + (map :valor compra))]
-    {:Mes mes  :Valor-da-fatura valor-total}))
+    {:Mes mes :Valor-da-fatura valor-total}))
 
-(defn lista-compras-na-mesma-fatura
-  [dados-do-cliente]
-  (->> dados-do-cliente
+(s/defn lista-compras-na-mesma-fatura
+  [cliente :- m/Cliente]
+  (->> cliente
        (lista-compras-realizadas)
        (sort-by :data)
        (reverse)
        (group-by verifica-mes)
        (map calcula-gastos-por-fatura)))
 
-(defn buscar-compra-por-valor
-  [dados-do-cliente]
-  (let [compras (lista-compras-realizadas dados-do-cliente)]
-    (println (filter (> (:valor compras) 500)))
-    ))
+(s/defn registra-compra :- m/Cliente
+  [cliente :- m/Cliente, limite :- m/PosOuZero, compra :- m/Compra]
+  (let [novo-limite (- limite (:valor compra))]
+    (println "Compra realizada:" compra)
+    (println "Novo limite:" novo-limite)
+    (let [cliente-up-compras
+          (update-in cliente [:cartao-de-credito :compras-realizadas] conj compra)]
+      (update-in cliente-up-compras [:cartao-de-credito :dados-cartao :limite]
+                 - (:valor compra)))))
 
-(defn verifica-valor
-  [compra]
-  (->> compra
-       :valor))
+(s/defn realizar-compra
+  [cliente :- m/Cliente, compra :- m/Compra]
+  (let [limite (busca-limite cliente)]
+    (if (tem-limite? limite (:valor compra))
+      (registra-compra cliente limite compra)
+      (do (println "Item:" (:item compra) "| Valor de:"(:valor compra))
+          (println "Compra não autorizada")) )))
 
-(defn compras-mais-caras-que
-  [dados-do-cliente valor]
-  (->> dados-do-cliente
-       (lista-compras-realizadas)
-       (map (:valor))
-       ))
+(s/defn realizar-varias-compras
+  [cliente :- m/Cliente, compras :- [m/Compra]]
+  (reduce realizar-compra cliente compras))
