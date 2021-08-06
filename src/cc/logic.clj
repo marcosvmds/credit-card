@@ -1,7 +1,7 @@
 (ns cc.logic
   (:require [cc.db]
             [cc.model :as m]
-            [java-time :as jt]
+            [java-time :refer :all]
             [schema.core :as s]
             [clojure.pprint :as pprint]))
 
@@ -24,7 +24,7 @@
        (lista-dados-cartao)
        :limite))
 
-(s/defn tem-limite?
+(s/defn tem-limite? :- s/Bool
   [limite :- m/PosOuZero, valor-da-compra]
   (>= limite valor-da-compra))
 
@@ -37,8 +37,8 @@
        reverse))
 
 (s/defn calcula-gastos-por-categoria
-  [[categoria, compra]]
-  (let [valor-total (reduce + (map :valor compra))]
+  [[categoria, compras-da-categoria]]
+  (let [valor-total (reduce + (map :valor compras-da-categoria))]
     {:categoria categoria :valor-total valor-total}))
 
 (s/defn lista-compras-por-categoria
@@ -50,9 +50,9 @@
 
 (s/defn verifica-mes
   [compra :- m/Compra]
-  (java-time/as (:data compra) :month-of-year))
+  (as (:data compra) :month-of-year))
 
-(s/defn calcula-gastos-por-fatura
+(s/defn calcula-gastos-por-fatura :- clojure.lang.PersistentArrayMap
   [[mes, compra]]
   (let [valor-total (reduce + (map :valor compra))]
     {:Mes mes :Valor-da-fatura valor-total}))
@@ -64,7 +64,8 @@
        (sort-by :data)
        (reverse)
        (group-by verifica-mes)
-       (map calcula-gastos-por-fatura)))
+       (map calcula-gastos-por-fatura)
+       ))
 
 (s/defn registra-compra :- m/Cliente
   [cliente :- m/Cliente, limite :- m/PosOuZero, compra :- m/Compra]
@@ -82,8 +83,17 @@
     (if (tem-limite? limite (:valor compra))
       (registra-compra cliente limite compra)
       (do (println "Item:" (:item compra) "| Valor de:"(:valor compra))
-          (println "Compra não autorizada")) )))
+          (println "Compra não autorizada")))))
 
 (s/defn realizar-varias-compras
   [cliente :- m/Cliente, compras :- [m/Compra]]
   (reduce realizar-compra cliente compras))
+
+(println (lista-compras-por-categoria (cc.db/cliente)))
+
+(->> (cc.db/cliente)
+     (lista-compras-realizadas)
+     (group-by :categoria)
+     println)
+
+ (calcula-gastos-por-categoria [1 [{:valor 1}, {:valor 1}], 2 [{:valor 55}, {:valor 1}]])

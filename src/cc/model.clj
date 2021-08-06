@@ -4,7 +4,7 @@
             [java-time :as jt])
   (:use [clojure.pprint]))
 
-(s/set-fn-validation! true)
+
 
 (def PosInt (s/pred pos-int?))
 
@@ -62,6 +62,14 @@
    :estabelecimento estabelecimento,
    :data            (jt/local-date)
    })
+
+(s/defn nova-compra-teste-valor :- Compra
+  [valor           :- s/Num]
+  {:item            "item teste",
+   :categoria       "categoria teste",
+   :valor           valor,
+   :estabelecimento "estabelecimento teste",
+   :data            (jt/local-date)})
 
 ;(pprint (s/explain Compra))
 (pprint (s/validate Compra {:item "Airmax", :categoria "roupa", :valor 699, :estabelecimento "Authentic feet", :data "12 25 29"}))

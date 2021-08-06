@@ -11,6 +11,7 @@
   [cliente]
   (println "------------- Dados do Cliente")
   (pprint (cc.logic/lista-dados-cliente cliente))
+  (println)
 
   (println "------- Dados do Cartao")
   (pprint (cc.logic/lista-dados-cartao cliente))
@@ -26,7 +27,7 @@
 
   (println "------- Realizando compras")
   (let [cliente-pos-compras (cc.logic/realizar-varias-compras
-          (cc.db/cliente), [(m/nova-compra "Bike" "lazer" 1450 "Caloi"),
+          (cc.db/cliente), [(m/nova-compra "City Tour Comp" "lazer" 1450 "Caloi"),
                             (m/nova-compra "Ingresso" "lazer" 200 "Hopi Hari"),
                             (m/nova-compra "Kinder ovo" "comida" 500 "Guanabara")])]
     (println)
