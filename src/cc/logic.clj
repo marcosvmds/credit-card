@@ -1,9 +1,9 @@
 (ns cc.logic
   (:require [cc.db]
             [cc.model :as m]
-            [java-time :refer :all]
             [schema.core :as s]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint])
+  [:use java-time :only [local-date as]])
 
 (s/set-fn-validation! true)
 

@@ -32,13 +32,11 @@
            [{:item "item teste", :categoria "categoria teste", :valor 1, :estabelecimento "categoria teste", :data "data teste"}])))
 
   (testing "Ao receber um cliente sem compras realizadas, retorna uma sequencia vazia"
-    (is (= (lista-compras-realizadas (db/cliente-com-limite-sem-compras)) ())))
-  )
+    (is (= (lista-compras-realizadas (db/cliente-com-limite-sem-compras)) ()))))
 
 (deftest calcula-gastos-por-categoria-test
   (testing "Ao receber um mapa de Categoria [Vetor de compras], retorna a soma dos valores das compras"
     (let [categoria-com-duas-compras [1 [{:valor 1}, {:valor 1}]]]
       (is (= (calcula-gastos-por-categoria categoria-com-duas-compras)
-              {:categoria 1 :valor-total 2})))
-    ))
+              {:categoria 1 :valor-total 2})))))
 

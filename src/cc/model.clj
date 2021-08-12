@@ -1,10 +1,11 @@
 (ns cc.model
-  (:require [cc.db]
-            [schema.core :as s]
-            [java-time :as jt])
-  (:use [clojure.pprint]))
+  (:require
+    [schema.core :as s]
+    [java-time :as jt])
+  (:use [clojure.pprint]
+        [java-time :only [local-date]]))
 
-
+(defn uuid [] (java.util.UUID/randomUUID))
 
 (def PosInt (s/pred pos-int?))
 
@@ -23,55 +24,77 @@
    :validade s/Any,
    :limite   PosOuZero})
 
-(def Compra
-  "Esquema de uma compra"
-  {:item            s/Str,
-   :categoria       s/Str,
-   :valor           PosOuZero,
-   :estabelecimento s/Str,
-   :data            s/Any})
-
-(def CartaoDeCredito
-  "Esquema de um CC"
-  {:dados-cartao       DadosDoCartao
-   :compras-realizadas [Compra]
-   })
 
 (def Cliente
   "Esquema de um cliente"
-  {:cliente-id        PosInt,
-   :dados-cliente     DadosDoCliente,
-   :cartao-de-credito CartaoDeCredito})
+  {})
 
 (s/defn novo-cliente :- Cliente
-  [id                 :- PosInt,
-   dados              :- DadosDoCliente,
-   cartao             :- CartaoDeCredito]
-  {:cliente-id        id,
-   :dados-cliente     dados,
-   :cartao-de-credito cartao})
+  []
+  {})
+
+
+
+(def CartaoDeCredito
+  "Esquema de um CC"
+  {:cartao/numero   s/Str
+   :cartao/cvv      s/Str
+   :cartao/validade s/Str
+   :cartao/limite   PosOuZero
+   :cartao/cliente  Cliente})
+
+(s/defn novo-cartao :- CartaoDeCredito
+  [numero cvv validade limite cliente]
+  {:cartao/numero   numero
+   :cartao/cvv      cvv
+   :cartao/validade validade
+   :cartao/limite   limite
+   :cartao/cliente  cliente})
+
+
+(def Categoria
+  "Categoria de um item comprado"
+  {:categoria/id   java.util.UUID
+   :categoria/nome s/Str})
+
+(defn nova-categoria
+  [nome]
+  {:categoria/id   (uuid)
+   :categoria/nome nome})
+
+
+(def Compra
+  "Esquema de uma compra"
+  {:compra/id              java.util.UUID
+   :compra/item            s/Str,
+   :compra/categoria       s/Str,
+   :compra/valor           PosOuZero,
+   :compra/estabelecimento s/Str,
+   :compra/data            s/Any})
 
 (s/defn nova-compra :- Compra
-  [item            :- s/Str,
-   categoria       :- s/Str,
-   valor           :- s/Num,
+  [item categoria valor estabelecimento]
+  {:compra/id              (uuid)
+   :compra/item            item
+   :compra/categoria       categoria
+   :compra/valor           valor
+   :compra/estabelecimento estabelecimento
+   :compra/data            "2021 08 11"})
+
+(s/defn nova-compra-antes :- Compra
+  [item :- s/Str,
+   categoria :- s/Str,
+   valor :- s/Num,
    estabelecimento :- s/Str]
   {:item            item,
    :categoria       categoria,
    :valor           valor,
    :estabelecimento estabelecimento,
-   :data            (jt/local-date)
+   :data            (local-date)
    })
 
-(s/defn nova-compra-teste-valor :- Compra
-  [valor           :- s/Num]
-  {:item            "item teste",
-   :categoria       "categoria teste",
-   :valor           valor,
-   :estabelecimento "estabelecimento teste",
-   :data            (jt/local-date)})
+
 
 ;(pprint (s/explain Compra))
-(pprint (s/validate Compra {:item "Airmax", :categoria "roupa", :valor 699, :estabelecimento "Authentic feet", :data "12 25 29"}))
 ;(pprint (nova-compra "Airmax", "roupa", 699, "Authentic feet", "12 25 29"))
 ;(pprint (s/validate PosOuZero 1 ))
